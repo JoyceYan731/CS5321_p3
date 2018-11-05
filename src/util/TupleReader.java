@@ -58,6 +58,17 @@ public class TupleReader {
 	//private boolean schemaIsInit; 之后再优化
 
 	
+	/**
+	 * for building index tree
+	 * @return the maximum number of tuples could be in this page
+	 */
+	public int getNumberOfMaxTuples() {
+		
+		int tupleSize = schema.size() *4;
+		return (int)(size - 8)/tupleSize;
+	}
+	
+	
 	public Map<String, Integer> getSchema() {
 		return schema;
 	}
@@ -340,6 +351,8 @@ public class TupleReader {
 		}
 		resetBuffer(numLast * (4 * this.schema.size()) + 8);
 	}
+	
+
 
 }
 

@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.List;
+
 import util.TupleReader;
 import data.Dynamic_properties;
 import data.Tuple;
@@ -64,6 +66,7 @@ public class TupleWriter {
 
 
 	}
+ * @throws IOException 
 	*/
 
 	//for test
@@ -83,7 +86,31 @@ public class TupleWriter {
 //
 //
 //	}
+	
+	//test for indextree
+	
+	public boolean writePage(List<Integer> data) throws IOException {
+	
+		
+		for (int i=0; i< data.size(); i++) {
+			/*write human readable file*/
+			humanbw.write(data.get(i).toString() + ' ');
+			
+			/*write binary file*/
+			buffer.putInt(bufferPosition, data.get(i));
+			bufferPosition +=4;
+		}
+		/*zero out the rest space*/
+		clear(bufferPosition);
+		fcout.write(buffer);
 
+		bufferPosition = 0;
+		
+		
+		return true;
+	}
+
+	
 	/** 
 	 * This method is a constructor which is to
 	 * init file path and related field
