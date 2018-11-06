@@ -96,6 +96,7 @@ public class TupleWriter {
 			/*write human readable file*/
 			humanbw.write(data.get(i).toString() + ' ');
 			
+					
 			/*write binary file*/
 			buffer.putInt(bufferPosition, data.get(i));
 			bufferPosition +=4;
@@ -110,6 +111,9 @@ public class TupleWriter {
 		return true;
 	}
 
+	public boolean reWritePage(List<Integer> data) throws IOException {
+		return true;
+	}
 	
 	/** 
 	 * This method is a constructor which is to

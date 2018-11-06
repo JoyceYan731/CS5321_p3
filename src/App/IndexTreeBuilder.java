@@ -9,11 +9,13 @@ import java.util.List;
 import java.util.Map;
 
 import data.Tuple;
-import util.Page;
+
 import util.TupleReader;
 import util.TupleWriter;
-import util.headerPage;
-import util.leafPage;
+import util.Node;
+import util.indexNode;
+import util.leafNode;
+
 
 public class IndexTreeBuilder {
 
@@ -82,7 +84,7 @@ public class IndexTreeBuilder {
 	
 	//main method to test
 	public static void main(String[] args) throws Exception {
-		IndexTreeBuilder builder = new IndexTreeBuilder("Boats", "D", 1,false);
+		IndexTreeBuilder builder = new IndexTreeBuilder("Boats", "E", 10,false);
 		builder.build();
 		
 		
@@ -109,28 +111,169 @@ public class IndexTreeBuilder {
 		}
 		Arrays.sort(keys);
 		
-		TupleWriter write = new TupleWriter("path");//path needs to be changed to real path later
+		String path = "src/samples/indexes/indextest";
+		TupleWriter write = new TupleWriter(path);//path needs to be changed to real path later
 		int pageIndex = 0;
 		
-		Page headPage = new headerPage();
-		List<Integer> data = headPage.initNewPage();
+		/*write header page*/
+		
+		System.out.println("head page");
+		Node headerNode = new indexNode();
+		headerNode.addressNumber = pageIndex;
+		List<Integer> data = headerNode.getDatalist();
 		write.writePage(data);
 		pageIndex++;
 		
+		
+		System.out.println("leaf page");
+		
 		/*write leaf page*/
-		Page leafPage = new leafPage();
+		/*the next position of key*/
+		int keyPosition = 0;
+		Deque<Node> nodeQueue = new LinkedList<>();
 		
-		Deque<Integer> keyQueue = new LinkedList<>();
-		Deque<Integer> valueQueue = new LinkedList<>();
-		int[] dataEntryIndex = new int[0];
-		
-		while (dataEntryIndex[0] < map.size()) {
-			data = leafPage.initNewPage(order,dataEntryIndex,map,keys);
+		while (keyPosition < keys.length) {
+			/*check the rest number of children*/
+			int restChildren = keys.length - keyPosition;
+			int keySize = 2 * order;
+			/*2d < children < 3d*/
+			if (restChildren > 2 * order && restChildren < 3 * order ) {
+				keySize = restChildren /2;
+			} else if (restChildren < 2* order) {
+				keySize = restChildren;
+			}
+			
+			Node leafNode = new leafNode();
+			leafNode.addressNumber = pageIndex;
+			leafNode.generate(map, keys, keyPosition, keySize);
+			data = leafNode.getDatalist();
 			write.writePage(data);
-			keyQueue.add(data.get(2));
-			valueQueue.add(pageIndex);
+			
+			nodeQueue.add(leafNode);
 			pageIndex++;
+			keyPosition += keySize;
+			
 		}
+		
+		boolean childLayer = true;
+		
+		/*write index page*/
+		while (!nodeQueue.isEmpty()) {
+			int size = nodeQueue.size();
+			if (size == 1 && !childLayer ) {
+				pageIndex--;
+				break;
+			}
+			int start = 0;
+			/*generate index node for this level*/
+			while (start < size) {
+				childLayer = false;
+				/*check the rest number of children*/
+				int restChildren = size - start;
+				int keySize = 2 * order +1;
+				/*2d +1 < children < 3d +2 */
+				if (restChildren > 2 * order +1  && restChildren < 3 * order +2 ) {
+					keySize = restChildren /2;
+				} else if (restChildren < 2* order +1) {
+					keySize = restChildren;
+				}
+				
+				Node indexNode = new indexNode();
+				indexNode.addressNumber = pageIndex;
+				
+				int counter = keySize;
+				while(counter>0) {
+					indexNode.addChildNode(nodeQueue.poll());
+					counter--;
+				}
+				
+				
+				indexNode.generate();
+				data = indexNode.getDatalist();
+				write.writePage(data);
+				
+				nodeQueue.add(indexNode);
+				pageIndex++;
+				start += keySize;
+				
+			}	
+			System.out.println("level");
+		}
+	
+		
+		write.close();
+		
+		
+		/*rewrite root node*/
+		
+		
+
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+//		@Override
+//		public List<Integer> initNewPage (int order, int[] dataEntryIndex, Map<Integer, List<Integer[]>> map, int[] keys) {
+//			
+//			List<Integer> list = new ArrayList<>();
+//			list.add(0);
+//			
+//			
+//			/*check the rest number of children*/
+//			
+//			int restChildren = keys.length - dataEntryIndex[0];
+//			int loopsize = 2 * order;
+//			/*2d < children < 3d*/
+//			if (restChildren > 2* order && restChildren < 3* order ) {
+//				loopsize = restChildren /2;
+//			} else if (restChildren < 2* order) {
+//				loopsize = restChildren;
+//			}
+//			list.add(loopsize);
+//			
+//			while (loopsize > 0) {
+//				int key = keys[dataEntryIndex[0]++];
+//				list.add(key);
+//				List<Integer[]> values = map.get(key);
+//				for (Integer[] pair : values) {
+//					list.add(pair[0]);
+//					list.add(pair[1]);
+//				}
+//				loopsize--;
+//			}
+			
+			
+			
+//			return list;
+//			
+//		}
+		
+		
+		
+		
+//		
+//		
+//		
+//		
+//		Page leafPage = new leafPage();
+//		
+//		Deque<Integer> keyQueue = new LinkedList<>();
+//		Deque<Integer> valueQueue = new LinkedList<>();
+//		int[] dataEntryIndex = new int[0];
+//		
+//		while (dataEntryIndex[0] < map.size()) {
+//			data = leafPage.initNewPage(order,dataEntryIndex,map,keys);
+//			write.writePage(data);
+//			keyQueue.add(data.get(2));
+//			valueQueue.add(pageIndex);
+//			pageIndex++;
+//		}
 
 		
 		
