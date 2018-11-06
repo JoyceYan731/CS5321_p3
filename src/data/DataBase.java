@@ -1,8 +1,10 @@
 package data;
 
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -23,6 +25,10 @@ public class DataBase {
 	private String data_path = Dynamic_properties.dataPath;
 	private String schema_path = Dynamic_properties.schemaPath;
 	
+	/* p3 update: get the path of index-info */
+	private String indexInfo_path = Dynamic_properties.indexInfoPath;
+	
+	
 	/*Track the address of each table
 	 * key:the name of the table
 	 * value: the address of the table*/
@@ -33,6 +39,9 @@ public class DataBase {
 	 * value: table column names
 	 */
 	private Map<String, LinkedList<String>> schemas = new HashMap<String, LinkedList<String>>();
+	
+	/* p3 update: stores the information from index_info.txt */
+	private Map<String, IndexNote> indexInfoRoster = new HashMap<>();
 	
 	/*Singleton pattern*/
 	private static volatile DataBase Instance =null;
@@ -57,6 +66,19 @@ public class DataBase {
 				line = br.readLine();
 			}
 			br.close();
+			
+			BufferedReader brIndex = new BufferedReader(new FileReader(indexInfo_path));
+			String lineIndex = brIndex.readLine();
+			while(lineIndex !=null) {
+				String[] res = lineIndex.split("\\s+");
+				if (res.length == 4) {
+					IndexNote indexInfo = new IndexNote(res[1], Integer.valueOf(res[2]) == 1, Integer.valueOf(res[3]));
+					indexInfoRoster.put(res[0], indexInfo);
+				}
+				lineIndex = brIndex.readLine();
+			}
+			brIndex.close();
+			
 		}catch(IOException e) {
 			System.out.println(e.getMessage());
 		}
@@ -87,12 +109,34 @@ public class DataBase {
 	}
 	
 	/**
-	 * getter method to get schema
+	 * getter method to get schema 
 	 */
 
 	public LinkedList<String> getSchema(String str){
 		return schemas.get(str);
 	}
-	
+}
 
+class IndexNote {
+	private String column;
+    private boolean clustered;
+    private int order;
+    
+    public IndexNote(String clmn, boolean clustered, int d) {
+    	this.column = clmn;
+    	this.clustered = clustered;
+    	this.order = d;
+    }
+    
+    public String getColumn() {
+    	return column;
+    }
+    
+    public boolean isClustered() {
+    	return clustered;
+    }
+    
+    public int getOrder() {
+    	return order;
+    }
 }
