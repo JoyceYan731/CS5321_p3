@@ -71,14 +71,14 @@ public class IndexScanOperator extends Operator{
 		
 		// if isClustered, read from the temporary directory of the table;
 		if (isClustered) {
-			this.tableAddress = Dynamic_properties.tempPath + "/sortedTableData" + tableName;  
+			this.tableAddress = Dynamic_properties.tempPath + "/"+ tableName;  
 		}
 		
 		// Initialize tuple reader according to the tableAddress and schema
 		this.tr = new TupleReader(tableAddress, schema);
 		tuplePerPage = tr.getNumberOfMaxTuples();
 		// IndexFile
-		this.indexFile = new File(Dynamic_properties.indexedPath + tableName + "." + indexColumn);
+		this.indexFile = new File(Dynamic_properties.indexedPath + "/" + tableName + "." + indexColumn);
 
 		// set the name of this operator ?? why ?
 		StringBuilder sb2 = new StringBuilder();
