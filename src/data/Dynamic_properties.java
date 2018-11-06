@@ -20,6 +20,7 @@ public class Dynamic_properties {
 	public static String indexedPath = inputPath + "/db/indexes";
 	public static String outputPath = "src/samples/output";
 	public static String tempPath = "src/samples/temp";
+
 	
 	/**
 	 * set input and output path according to pass in parameters
