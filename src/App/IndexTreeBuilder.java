@@ -2,12 +2,14 @@ package App;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import data.Dynamic_properties;
 import data.Tuple;
 
 import util.TupleReader;
@@ -15,19 +17,25 @@ import util.TupleWriter;
 import util.Node;
 import util.indexNode;
 import util.leafNode;
-
+import java.util.Collections;
+import java.util.Comparator;
 
 public class IndexTreeBuilder {
 
-
-	
-	
-	
+	//再看一下各种路径的初始化 constructor可能要变
 	private int order;
 	private String tableName;
 	private String attribute;
 	private boolean isClustered;
+	private Map<String, Integer> schema;
+	private String indexFilePath;
+	private String clusterFilePath;
 
+	public IndexTreeBuilder() {
+		
+		
+	}
+	
 	public IndexTreeBuilder(String tableName, String attribute, int order, boolean isClustered) {
 
 		this.tableName = tableName;
@@ -37,28 +45,27 @@ public class IndexTreeBuilder {
 
 	}
 
-	//	class tuplePair{
-	//		public int pageNumber;
-	//		public int tupleIndex;
-	//		
-	//		public tuplePair(int pageNumber, int tupleIndex) {
-	//			this.pageNumber = pageNumber;
-	//			this.tupleIndex = tupleIndex;
-	//		}
-	//		
-	//	}
-
 	public Map<Integer, List<Integer[]>> buildMap() throws Exception{
 		
 		Map<Integer, List<Integer[]>> map = new HashMap<>();
 		
-		TupleReader reader = new TupleReader(tableName);
+		//should test later or refactor
+		
+		TupleReader reader = null;
+		if (isClustered) {
+			
+			reader = new TupleReader(clusterFilePath, schema);
+			
+		} else {
+			
+			reader = new TupleReader(tableName);
+		}
+	
 		int maxTupleNumber = reader.getNumberOfMaxTuples();
 
 		Tuple cur = reader.readNextTuple();
 		int tupleNumbers = 0;
 
-		//handle cluster or not
 		
 		while ( cur!= null) {
 			int tupleIndex = tupleNumbers % maxTupleNumber;
@@ -84,13 +91,54 @@ public class IndexTreeBuilder {
 	
 	//main method to test
 	public static void main(String[] args) throws Exception {
-		IndexTreeBuilder builder = new IndexTreeBuilder("Boats", "E", 10,false);
+		//IndexTreeBuilder builder = new IndexTreeBuilder("Boats", "E", 10, true);
+		IndexTreeBuilder builder = new IndexTreeBuilder("Sailors", "A", 15, true);
 		builder.build();
 		
 		
 	}
 
-	public void reCluster () {
+	public void reCluster () throws Exception {
+		/*read all tuples in memory*/
+		List<Tuple> tuples = new ArrayList<>();
+		TupleReader read = new TupleReader(tableName);
+		
+		Tuple cur = read.readNextTuple();
+		schema = cur.getSchema();
+		while (cur != null) {
+			tuples.add(cur);
+			cur = read.readNextTuple();
+		}
+		
+		Collections.sort(tuples, new Comparator<Tuple>(){
+
+			@Override
+			public int compare(Tuple o1, Tuple o2) {
+				int index = o1.getSchema().get(tableName+"."+ attribute);
+				int data1 = (int)o1.getData()[index];
+				int data2 = (int)o2.getData()[index];
+				
+				if (data1 == data2) {
+					return 0;
+				}
+				return data1 < data2 ? -1:1;
+			}
+		});
+		
+		//should change later 
+		//String path = "src/samples/temp/"+tableName;
+		
+		clusterFilePath = Dynamic_properties.tempPath+"/"+tableName;
+		
+		
+		TupleWriter write = new TupleWriter(clusterFilePath);
+		int counter =0;
+		for (int i=0; i< tuples.size(); i++) {
+			write.writeTuple(tuples.get(i));
+			counter++;
+		}
+		write.writeTuple(null);
+		
 		
 	}
 	
@@ -111,6 +159,7 @@ public class IndexTreeBuilder {
 		}
 		Arrays.sort(keys);
 		
+
 		String path = "src/samples/indexes/indextest";
 		TupleWriter write = new TupleWriter(path);//path needs to be changed to real path later
 		int pageIndex = 0;
@@ -155,6 +204,7 @@ public class IndexTreeBuilder {
 			
 		}
 		
+		int leafNumber = pageIndex-1;
 		boolean childLayer = true;
 		
 		/*write index page*/
@@ -201,97 +251,18 @@ public class IndexTreeBuilder {
 		}
 	
 		
-		write.close();
+		
 		
 		
 		/*rewrite root node*/
+		headerNode.getDatalist().add(pageIndex);
+		headerNode.getDatalist().add(leafNumber);
+		headerNode.getDatalist().add(order);
 		
-		
-
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-//		@Override
-//		public List<Integer> initNewPage (int order, int[] dataEntryIndex, Map<Integer, List<Integer[]>> map, int[] keys) {
-//			
-//			List<Integer> list = new ArrayList<>();
-//			list.add(0);
-//			
-//			
-//			/*check the rest number of children*/
-//			
-//			int restChildren = keys.length - dataEntryIndex[0];
-//			int loopsize = 2 * order;
-//			/*2d < children < 3d*/
-//			if (restChildren > 2* order && restChildren < 3* order ) {
-//				loopsize = restChildren /2;
-//			} else if (restChildren < 2* order) {
-//				loopsize = restChildren;
-//			}
-//			list.add(loopsize);
-//			
-//			while (loopsize > 0) {
-//				int key = keys[dataEntryIndex[0]++];
-//				list.add(key);
-//				List<Integer[]> values = map.get(key);
-//				for (Integer[] pair : values) {
-//					list.add(pair[0]);
-//					list.add(pair[1]);
-//				}
-//				loopsize--;
-//			}
-			
-			
-			
-//			return list;
-//			
-//		}
-		
-		
-		
-		
-//		
-//		
-//		
-//		
-//		Page leafPage = new leafPage();
-//		
-//		Deque<Integer> keyQueue = new LinkedList<>();
-//		Deque<Integer> valueQueue = new LinkedList<>();
-//		int[] dataEntryIndex = new int[0];
-//		
-//		while (dataEntryIndex[0] < map.size()) {
-//			data = leafPage.initNewPage(order,dataEntryIndex,map,keys);
-//			write.writePage(data);
-//			keyQueue.add(data.get(2));
-//			valueQueue.add(pageIndex);
-//			pageIndex++;
-//		}
-
-		
-		
-		
-		
+		write.reWritePage(0, headerNode.getDatalist());
+		write.close();
 		
 	
-
-
-
-
-
-
-
-		//		//2 open channel, write header page, generate leaf node page
-		//		write(int pagenumber, int position, int number);
-		//		//3 generate index node page
-		//		//4 generate root node page
 
 	}
 
