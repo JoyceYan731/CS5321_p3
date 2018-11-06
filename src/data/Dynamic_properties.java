@@ -17,9 +17,10 @@ public class Dynamic_properties {
 	public static String configuePath = inputPath + "/plan_builder_config.txt";
 	public static String schemaPath = inputPath + "/db/schema.txt";
 	public static String indexInfoPath = inputPath + "/db/index_info.txt";
-	public static String indexedPath = inputPath + "/db/indexes/";
+	public static String indexedPath = inputPath + "/db/indexes";
 	public static String outputPath = "src/samples/output";
 	public static String tempPath = "src/samples/temp";
+
 	
 	/**
 	 * set input and output path according to pass in parameters

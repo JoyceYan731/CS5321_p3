@@ -91,7 +91,7 @@ public class TupleWriter {
 	
 	public boolean writePage(List<Integer> data) throws IOException {
 	
-		
+		bufferPosition = 0;
 		for (int i=0; i< data.size(); i++) {
 			/*write human readable file*/
 			humanbw.write(data.get(i).toString() + ' ');
@@ -105,13 +105,17 @@ public class TupleWriter {
 		clear(bufferPosition);
 		fcout.write(buffer);
 
-		bufferPosition = 0;
+		//bufferPosition = 0;
 		
 		
 		return true;
 	}
 
-	public boolean reWritePage(List<Integer> data) throws IOException {
+	public boolean reWritePage(int addressNumber, List<Integer> data) throws IOException {
+		
+		fcout.position(addressNumber);
+		writePage(data);
+		
 		return true;
 	}
 	

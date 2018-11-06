@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test;
 
 class IndexScanOperatorTest {
 
-//	@Test
-//	void test() {
-//		Operator = new IndexScanOperator(String tableName, String tableAliase, String indexColumn, Integer lowerBound, Integer upperBound) {
-//	}
-
+	@Test
+	void test() {
+		Operator test = new IndexScanOperator("Sailors", "Sailors", "A", null, 20);
+		test.dump();
+	}
 }
