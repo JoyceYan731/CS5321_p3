@@ -5,9 +5,20 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 
+/**
+ *  leaf node class
+ *  
+ *  it will be used when generating index tree
+ *  
+ *  @author Xiaoxing Yan
+ */
+
 public class leafNode extends Node{
 
-
+	/**
+	 * constructor to init related fields
+	 * 
+	 */
 	public leafNode() {
 		super();
 	}

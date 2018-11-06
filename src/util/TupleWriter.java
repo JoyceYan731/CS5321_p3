@@ -87,8 +87,14 @@ public class TupleWriter {
 //
 //	}
 	
-	//test for indextree
 	
+	/**
+	 * write a page integer by integer
+	 * 
+	 * @param data -- datalist
+	 * @return
+	 * @throws IOException
+	 */
 	public boolean writePage(List<Integer> data) throws IOException {
 	
 		bufferPosition = 0;
@@ -105,12 +111,17 @@ public class TupleWriter {
 		clear(bufferPosition);
 		fcout.write(buffer);
 
-		//bufferPosition = 0;
-		
-		
 		return true;
 	}
 
+	/**
+	 * rewrite page at fixed address
+	 * 
+	 * @param addressNumber - page index
+	 * @param data
+	 * @return
+	 * @throws IOException
+	 */
 	public boolean reWritePage(int addressNumber, List<Integer> data) throws IOException {
 		
 		fcout.position(addressNumber);
