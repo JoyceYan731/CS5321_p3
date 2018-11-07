@@ -535,59 +535,59 @@ public class ExternalSortOperator extends Operator{
 	}
 	
 	//Test
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		long[] data1 = {1,4,4,4};
-		long[] data2 = {1,4,3,3};
-		long[] data3 = {2,4,3,1};
-		long[] data4 = {3,5,5,5};
-		long[] data5 = {6,2,5,5};
-		HashMap<String, Integer> schema1 = new HashMap<String, Integer>();
-		schema1.put("S.A", 0);
-		schema1.put("S.B", 1);
-		schema1.put("R.G", 2);
-		schema1.put("R.H", 3);
-		Tuple t1 = new Tuple(data1, schema1);
-		Tuple t2 = new Tuple(data2, schema1);
-		Tuple t3 = new Tuple(data3, schema1);
-		Tuple t4 = new Tuple(data4, schema1);
-		Tuple t5 = new Tuple(data5, schema1);
-		long[] data6 = {1,4,4,4};
-		long[] data7 = {1,4,3,3};
-		long[] data8 = {1,3,3,1};
-		long[] data9 = {3,1,5,5};
-		long[] data10 = {6,2,5,5};
-		//HashMap<String, Integer> schema1 = new HashMap<String, Integer>();
-		Tuple t6 = new Tuple(data1, schema1);
-		Tuple t7 = new Tuple(data2, schema1);
-		Tuple t8 = new Tuple(data3, schema1);
-		Tuple t9 = new Tuple(data4, schema1);
-		Tuple t10 = new Tuple(data5, schema1);
-		Tuple[] arr = {t1, t2, t3, t4, t5, null, t6,t7,t8,t9,t10,null};
-		LinkedList<String> orderList = new LinkedList<String>();
-		orderList.add("S.A");
-		//orderList.add("S.B");
-		//orderList.add("S.A");
-		ExternalSortOperator es = new ExternalSortOperator(orderList);
-		int tp = 6;
-		int[] pointers = {0, tp};
-		Tuple t = es.mergeSort(arr, pointers, tp);
-		while (t!= null) {
-			
-			t.printData();
-			t = es.mergeSort(arr, pointers, tp);
-			
-		}
-//		ScanOperator sc = new ScanOperator("Boats");
-//		List<String> order = new LinkedList<String>();
-//		order.add("Boats.E");
-//		ExternalSortOperator es = new ExternalSortOperator(2, 3, order, sc.schema, sc);
-//		//es.dump();
-//		for (int i = 0; i<100; i++) {
-//			Tuple t = es.getNextTuple();
+//	public static void main(String[] args) {
+//		// TODO Auto-generated method stub
+//		long[] data1 = {1,4,4,4};
+//		long[] data2 = {1,4,3,3};
+//		long[] data3 = {2,4,3,1};
+//		long[] data4 = {3,5,5,5};
+//		long[] data5 = {6,2,5,5};
+//		HashMap<String, Integer> schema1 = new HashMap<String, Integer>();
+//		schema1.put("S.A", 0);
+//		schema1.put("S.B", 1);
+//		schema1.put("R.G", 2);
+//		schema1.put("R.H", 3);
+//		Tuple t1 = new Tuple(data1, schema1);
+//		Tuple t2 = new Tuple(data2, schema1);
+//		Tuple t3 = new Tuple(data3, schema1);
+//		Tuple t4 = new Tuple(data4, schema1);
+//		Tuple t5 = new Tuple(data5, schema1);
+//		long[] data6 = {1,4,4,4};
+//		long[] data7 = {1,4,3,3};
+//		long[] data8 = {1,3,3,1};
+//		long[] data9 = {3,1,5,5};
+//		long[] data10 = {6,2,5,5};
+//		//HashMap<String, Integer> schema1 = new HashMap<String, Integer>();
+//		Tuple t6 = new Tuple(data1, schema1);
+//		Tuple t7 = new Tuple(data2, schema1);
+//		Tuple t8 = new Tuple(data3, schema1);
+//		Tuple t9 = new Tuple(data4, schema1);
+//		Tuple t10 = new Tuple(data5, schema1);
+//		Tuple[] arr = {t1, t2, t3, t4, t5, null, t6,t7,t8,t9,t10,null};
+//		LinkedList<String> orderList = new LinkedList<String>();
+//		orderList.add("S.A");
+//		//orderList.add("S.B");
+//		//orderList.add("S.A");
+//		ExternalSortOperator es = new ExternalSortOperator(orderList);
+//		int tp = 6;
+//		int[] pointers = {0, tp};
+//		Tuple t = es.mergeSort(arr, pointers, tp);
+//		while (t!= null) {
+//			
 //			t.printData();
+//			t = es.mergeSort(arr, pointers, tp);
+//			
 //		}
-
-	}
+////		ScanOperator sc = new ScanOperator("Boats");
+////		List<String> order = new LinkedList<String>();
+////		order.add("Boats.E");
+////		ExternalSortOperator es = new ExternalSortOperator(2, 3, order, sc.schema, sc);
+////		//es.dump();
+////		for (int i = 0; i<100; i++) {
+////			Tuple t = es.getNextTuple();
+////			t.printData();
+////		}
+//
+//	}
 
 }
