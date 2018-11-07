@@ -23,6 +23,7 @@ import operators.BNLJoinOperator;
 import operators.DuplicateEliminationOperator;
 import operators.ExternalSortOperator;
 import operators.InMemSortOperator;
+import operators.IndexScanOperator;
 import operators.JoinOperator;
 import operators.Operator;
 import operators.ProjectOperator;
@@ -93,12 +94,21 @@ public class PhysicalPlanVisitor {
 	 * @param scOp: logical scan operator
 	 */
 	public void visit(LogicalScanOperator scOp) {
+		String tableName = scOp.getTableName();
+		String tableAliase = scOp.getTableAliase();
+		Expression expression = scOp.getCondition();
 		if(indexState == 1) {
+			IndexExpressionVisitor indVisitor = new IndexExpressionVisitor(scOp);
+			indVisitor.Classify();
+			Integer[] bounds = indVisitor.getBounds();
+			String column = indVisitor.getIndexColumn();
+			if(!(bounds[0]==null && bounds[1]==null)) {
+				IndexScanOperator indScan = new IndexScanOperator(tableName, tableAliase, column, bounds[1], bounds[0]);
+				childList.add(indScan);
+			}
+			Expression unindexedCondition = indVisitor.getUnIndexedCondition();
 			
 		}else {
-			String tableName = scOp.getTableName();
-			String tableAliase = scOp.getTableAliase();
-			Expression expression = scOp.getCondition();
 			ScanOperator scan = new ScanOperator(tableName, tableAliase, expression);
 			childList.add(scan);
 			root = scan;

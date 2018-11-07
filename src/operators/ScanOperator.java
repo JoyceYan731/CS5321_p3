@@ -34,26 +34,42 @@ public class ScanOperator extends Operator{
 	 */
 	@Override
 	public Tuple getNextTuple() {
-		try {
-			//String data = tr.readNextTuple().getTupleData();
-			Tuple t = tr.readNextTuple();
-			if (t!=null) {
-				/*Handle aliases*/
-				//Tuple t = new Tuple(data, tableAliase, attributes);
+		if (this.leftChild != null) {
+			try {
+				//String data = tr.readNextTuple().getTupleData();
+				Tuple t = tr.readNextTuple();
+				if (t != null) {
+					/*Handle aliases*/
+					//Tuple t = new Tuple(data, tableAliase, attributes);
+					Expression e = this.getExpression();
+					if(e != null) {
+						while (t != null) {
+							boolean res = super.judgeExpression(t);
+							if(res) break;
+							t = tr.readNextTuple();				
+						}			
+					}
+					return t;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				e.getMessage();
+			}
+		}else {
+			Tuple t = this.leftChild.getNextTuple();
+			if (t != null) {
 				Expression e = this.getExpression();
 				if(e!=null) {
-					while (t!=null) {
+					while (t != null) {
 						boolean res = super.judgeExpression(t);
 						if(res) break;
-						t = tr.readNextTuple();				
+						t = this.leftChild.getNextTuple();				
 					}			
 				}
 				return t;
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			e.getMessage();
 		}
+		
 		
 		return null;
 	}
@@ -177,7 +193,7 @@ public class ScanOperator extends Operator{
 	 * @param operator
 	 * 
 	 */
-	public ScanOperator(String tableName, String tableAliase, Operator op) {
+	public ScanOperator(String tableName, String tableAliase, Expression expression, Operator op) {
 		this.tableName = tableName;
 		this.tableAddress = DataBase.getInstance().getAddresses(tableName);
 		this.tableFile = new File(tableAddress);
@@ -189,7 +205,8 @@ public class ScanOperator extends Operator{
 		if (tableAliase == null) this.tableAliase = tableName;
 		else this.tableAliase = tableAliase;
 		this.attributes = DataBase.getInstance().getSchema(tableName);
-		
+		setExpression(expression);
+		setLeftChild(op);
 		
 		//modification
 		schema = tr.getSchema();

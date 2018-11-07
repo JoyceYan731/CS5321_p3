@@ -1,6 +1,7 @@
 package visitors;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -51,28 +52,35 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
 public class IndexExpressionVisitor implements ExpressionVisitor {
-	private IndexNote indexColumn;
+	private String indexColumn;
 	private String tableName;
 	private String tableAliase;
 	private Expression targetExpression;
-	private List<Expression> indexedCondition = new LinkedList<Expression>();
+	//private Map<Expression, Integer[]> indexedCondition = new HashMap<Expression, Integer[]>();//key: indexed conditions, value: upper and loer bounds
+	private Integer[] bounds; // bounds[0]: upper bound, bounds[1]: lower bound
 	private List<Expression> unindexedCondition = new LinkedList<Expression>();
+	
 	public IndexExpressionVisitor(LogicalScanOperator logicalScan) {
 		tableName = logicalScan.getTableName();
 		tableAliase = logicalScan.getTableAliase();
 		targetExpression = logicalScan.getCondition();
 		Map<String, IndexNote> indexInfoRoster = DataBase.getInstance().getIndexInfos();
-		indexColumn = indexInfoRoster.get(tableName);
+		if (indexInfoRoster.containsKey(tableName)) {
+			indexColumn = indexInfoRoster.get(tableName).getColumn();
+		}
+		bounds = new Integer[2];
+		bounds[0] = null;
+		bounds[1] = null;
 		
 	}
 	
 	
-	public IndexNote getIndexColumn() {
+	public String getIndexColumn() {
 		return indexColumn;
 	}
 
 
-	public void setIndexColumn(IndexNote indexColumn) {
+	public void setIndexColumn(String indexColumn) {
 		this.indexColumn = indexColumn;
 	}
 
@@ -95,20 +103,19 @@ public class IndexExpressionVisitor implements ExpressionVisitor {
 	public void setTableAliase(String tableAliase) {
 		this.tableAliase = tableAliase;
 	}
-
-
-	public List<Expression> getIndexedCondition() {
-		return indexedCondition;
+	
+	public Integer[] getBounds() {
+		return bounds;
+	}
+	
+	public void setBounds(Integer[] bounds) {
+		this.bounds = bounds;
 	}
 
 
-	public void setIndexedCondition(List<Expression> indexedCondition) {
-		this.indexedCondition = indexedCondition;
-	}
 
-
-	public List<Expression> getUnIndexedCondition() {
-		return unindexedCondition;
+	public Expression getUnIndexedCondition() {
+		return unindexedCondition.get(0);
 	}
 
 
@@ -250,17 +257,21 @@ public class IndexExpressionVisitor implements ExpressionVisitor {
 			unindexedCondition.add(arg0);
 		}else if (left instanceof Column) {
 			Column column = (Column)left;
+			LongValue value = (LongValue)right;
 			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
-			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
-				indexedCondition.add(arg0);
+			if (tableNameIndices[1].equals(indexColumn)) {
+				bounds[0] = (int)value.getValue();
+				bounds[1] = (int)value.getValue();
 			}else {
 				unindexedCondition.add(arg0);
 			}
 		}else if (right instanceof Column) {
 			Column column = (Column)right;
+			LongValue value = (LongValue)left;
 			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
-			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
-				indexedCondition.add(arg0);
+			if (tableNameIndices[1].equals(indexColumn)) {
+				bounds[0] = (int)value.getValue();
+				bounds[1] = (int)value.getValue();
 			}else {
 				unindexedCondition.add(arg0);
 			}
@@ -277,17 +288,21 @@ public class IndexExpressionVisitor implements ExpressionVisitor {
 			unindexedCondition.add(arg0);
 		}else if (left instanceof Column) {
 			Column column = (Column)left;
+			LongValue value = (LongValue)right;
 			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
-			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
-				indexedCondition.add(arg0);
+			if (tableNameIndices[1].equals(indexColumn)) {
+				bounds[0] = null;
+				bounds[1] = (int)value.getValue() + 1;
 			}else {
 				unindexedCondition.add(arg0);
 			}
 		}else if (right instanceof Column) {
 			Column column = (Column)right;
+			LongValue value = (LongValue)left;
 			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
-			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
-				indexedCondition.add(arg0);
+			if (tableNameIndices[1].equals(indexColumn)) {
+				bounds[0] = null;
+				bounds[1] = (int)value.getValue() + 1;
 			}else {
 				unindexedCondition.add(arg0);
 			}
@@ -305,17 +320,22 @@ public class IndexExpressionVisitor implements ExpressionVisitor {
 			unindexedCondition.add(arg0);
 		}else if (left instanceof Column) {
 			Column column = (Column)left;
+			LongValue value = (LongValue)right;
 			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
-			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
-				indexedCondition.add(arg0);
+			if (tableNameIndices[1].equals(indexColumn)) {
+				bounds[0] = null;
+				bounds[1] = (int)value.getValue();
 			}else {
 				unindexedCondition.add(arg0);
 			}
 		}else if (right instanceof Column) {
 			Column column = (Column)right;
+			LongValue value = (LongValue)left;
 			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
-			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
-				indexedCondition.add(arg0);
+			if (tableNameIndices[1].equals(indexColumn)) {
+				Integer[] bounds = new Integer[2];
+				bounds[0] = null;
+				bounds[1] = (int)value.getValue();
 			}else {
 				unindexedCondition.add(arg0);
 			}
@@ -351,17 +371,21 @@ public class IndexExpressionVisitor implements ExpressionVisitor {
 			unindexedCondition.add(arg0);
 		}else if (left instanceof Column) {
 			Column column = (Column)left;
+			LongValue value = (LongValue)right;
 			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
-			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
-				indexedCondition.add(arg0);
+			if (tableNameIndices[1].equals(indexColumn)) {
+				bounds[0] = (int)value.getValue()-1;
+				bounds[1] = null;
 			}else {
 				unindexedCondition.add(arg0);
 			}
 		}else if (right instanceof Column) {
 			Column column = (Column)right;
+			LongValue value = (LongValue)left;
 			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
-			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
-				indexedCondition.add(arg0);
+			if (tableNameIndices[1].equals(indexColumn)) {
+				bounds[0] = (int)value.getValue()-1;
+				bounds[1] = null;
 			}else {
 				unindexedCondition.add(arg0);
 			}
@@ -379,17 +403,21 @@ public class IndexExpressionVisitor implements ExpressionVisitor {
 			unindexedCondition.add(arg0);
 		}else if (left instanceof Column) {
 			Column column = (Column)left;
+			LongValue value = (LongValue)right;
 			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
-			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
-				indexedCondition.add(arg0);
+			if (tableNameIndices[1].equals(indexColumn)) {
+				bounds[0] = (int)value.getValue();
+				bounds[1] = null;
 			}else {
 				unindexedCondition.add(arg0);
 			}
 		}else if (right instanceof Column) {
 			Column column = (Column)right;
+			LongValue value = (LongValue)left;
 			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
-			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
-				indexedCondition.add(arg0);
+			if (tableNameIndices[1].equals(indexColumn)) {
+				bounds[0] = (int)value.getValue();
+				bounds[1] = null;
 			}else {
 				unindexedCondition.add(arg0);
 			}
@@ -401,8 +429,7 @@ public class IndexExpressionVisitor implements ExpressionVisitor {
 
 	@Override
 	public void visit(NotEqualsTo arg0) {
-		unindexedCondition.add(arg0)
-		
+		unindexedCondition.add(arg0);
 	}
 
 	@Override
