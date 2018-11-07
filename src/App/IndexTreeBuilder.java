@@ -42,37 +42,38 @@ public class IndexTreeBuilder {
 	private boolean isClustered;
 	private Map<String, Integer> schema;
 	private String indexFilePath;
+	/*store temporary sorted file*/
 	private String clusterFilePath;
 	private Map<String, IndexNote> indexInfoRoster;
 
 
-	//main method to test
-	public static void main(String[] args) throws Exception {
-		//IndexTreeBuilder builder = new IndexTreeBuilder("Boats", "E", 10, true);
-		IndexTreeBuilder builder = new IndexTreeBuilder();
-		builder.build();
+////	//main method to test
+//	public static void main(String[] args) throws Exception {
+//		//IndexTreeBuilder builder = new IndexTreeBuilder("Boats", "E", 10, true);
+//		IndexTreeBuilder builder = new IndexTreeBuilder();
+//		builder.build();
+////
+////
+//	}
 
-
-	}
-
+	/** 
+	 * This method is a constructor which is to
+	 * init file path and related field
+	 * 
+	 * @param tableInfo decide which table we want to read
+	 * 
+	 */
 	public IndexTreeBuilder() {
 
 		//for test
-		Map<String, IndexNote> temp = new HashMap<String, IndexNote>();
-		temp.put("Boats", new IndexNote("E",false,10));
-		temp.put("Sailors", new IndexNote("A",true,15));
+//		Map<String, IndexNote> temp = new HashMap<String, IndexNote>();
+//		temp.put("Boats", new IndexNote("E",false,10));
+//		temp.put("Sailors", new IndexNote("A",true,15));
+//
+//
+//		indexInfoRoster = temp;
 
-
-		indexInfoRoster = temp;
-
-		//indexInfoRoster = DataBase.getInstance().getIndexInfos();
-
-
-
-
-
-
-
+		indexInfoRoster = DataBase.getInstance().getIndexInfos();
 
 		/* tempPath = "src/samples/temp" */
 		clusterFilePath = Dynamic_properties.tempPath;
@@ -100,19 +101,11 @@ public class IndexTreeBuilder {
 		}
 	}
 
-	//	public IndexTreeBuilder(String tableName, String attribute, int order, boolean isClustered) {
-	//
-	//		this.tableName = tableName;
-	//		this.order = order;
-	//		this.attribute = attribute;
-	//		this.isClustered = isClustered;
-	//
-	//	}
-
-
-
-
-
+	/**
+	 * helper function to build index tree for every table
+	 * 
+	 * @throws Exception
+	 */
 
 	public void buildHelper() throws Exception {
 
@@ -120,7 +113,7 @@ public class IndexTreeBuilder {
 			reCluster () ;
 		}
 
-		//1 generate map
+		/*generate map to store <key, List< [pageid, tupleid] >>*/
 		Map<Integer, List<Integer[]>> map  = buildMap();
 
 		int[] keys = new int[map.size()];
@@ -130,13 +123,12 @@ public class IndexTreeBuilder {
 		}
 		Arrays.sort(keys);
 
-		//		"src/samples/indexes/indextest";
+		//"src/samples/indexes/indextest";
 		String path = indexFilePath + "/" + tableName + "."+attribute;
 		TupleWriter write = new TupleWriter(path);
 		int pageIndex = 0;
 
 		/*write header page*/
-
 		System.out.println("header page");
 		Node headerNode = new indexNode();
 		headerNode.addressNumber = pageIndex;
@@ -146,8 +138,8 @@ public class IndexTreeBuilder {
 
 
 		System.out.println("leaf page");
-
 		/*write leaf page*/
+		
 		/*the next position of key*/
 		int keyPosition = 0;
 		Deque<Node> nodeQueue = new LinkedList<>();
@@ -181,6 +173,9 @@ public class IndexTreeBuilder {
 		/*write index page*/
 		while (!nodeQueue.isEmpty()) {
 			int size = nodeQueue.size();
+			/*handle case that the only have one leaf node
+			 * and it will generate a index tree like (index node without key) --> (leaf node)
+			 * */
 			if (size == 1 && !childLayer ) {
 				pageIndex--;
 				break;
@@ -221,10 +216,6 @@ public class IndexTreeBuilder {
 			System.out.println("level");
 		}
 
-
-
-
-
 		/*rewrite root node*/
 		headerNode.getDatalist().add(pageIndex);
 		headerNode.getDatalist().add(leafNumber);
@@ -237,19 +228,21 @@ public class IndexTreeBuilder {
 
 	}
 
+	/**
+	 * build map to store <key, List< [pageid, tupleid] >>
+	 * 
+	 * @return map
+	 * @throws Exception
+	 */
 	public Map<Integer, List<Integer[]>> buildMap() throws Exception{
 
 		Map<Integer, List<Integer[]>> map = new HashMap<>();
 
-		//should test later or refactor
-
 		TupleReader reader = null;
+		/*if needs clustered, read tuples from temporary sorted files*/
 		if (isClustered) {
-
 			reader = new TupleReader(clusterFilePath, schema);
-
 		} else {
-
 			reader = new TupleReader(tableName);
 		}
 
@@ -281,9 +274,14 @@ public class IndexTreeBuilder {
 	}
 
 
+	/**
+	 * generate new sorted file
+	 * 
+	 * @throws Exception
+	 */
 	public void reCluster () throws Exception {
 
-		/*read all tuples in memory*/
+		/*read all tuples and store them in memory*/
 		List<Tuple> tuples = new ArrayList<>();
 		TupleReader read = new TupleReader(tableName);
 
@@ -310,7 +308,7 @@ public class IndexTreeBuilder {
 		});
 
 		clusterFilePath = clusterFilePath +"/"+tableName;
-
+		
 		TupleWriter write = new TupleWriter(clusterFilePath);
 
 		for (int i=0; i< tuples.size(); i++) {
@@ -318,7 +316,6 @@ public class IndexTreeBuilder {
 
 		}
 		write.writeTuple(null);
-
 
 	}
 
