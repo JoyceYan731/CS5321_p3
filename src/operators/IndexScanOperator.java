@@ -15,21 +15,43 @@ import data.Dynamic_properties;
 import data.Tuple;
 import util.TupleReader;
 
-
+/**
+ * This is the class of Physical IndexScanOperator. When constructing the physical query plan from
+ * logical query plan, we check if the scan conditions of the logical scan operator are suitable for
+ * index tree-based way of searching tuples. If (part of) these conditions are, we can construct the
+ * IndexScanOperator by given table name, table alias, the index column as well as the lowerBound and
+ * upper bound.
+ * 
+ * For example, if the scan conditions for a scan logical operator with tableName to be "Sailors" is
+ * "S.A > 12 AND S.B = 3", and there is an index for table sailors indexed by the column of A, we are
+ * able to build the constructor by 
+ * 
+ *     new IndexScanOperator("Sailors", "S", "A", 13, null);
+ *     
+ * This IndexScanOperator has the public method "getNextTuple()". Every time it is called,
+ * this operator will return the next row of Sailors which are qualified for "S.A > 12". 
+ * The way that IndexScanOperator finds tuples is to look up the index tree of Sailors 
+ * in "input/db/indexes" directory and find the tuples guided by the addresses and rids in it.
+ * 
+ * @author Ruoxuan Xu
+ *
+ */
 public class IndexScanOperator extends Operator{
-	
 	private final int BUFFER_SIZE = 4096;
-	// for tableName and alias
+	
+	/** tableName, alias and table address for this operator */
 	private String tableName;
 	private String tableAddress;
 	private String tableAliase;
 	
-	// for IO of tables
+	/**  tr is the tupleReader that are used by this operator to read tuples from data */
 	private TupleReader tr;
+	/** the capacity of each page to store tuples */
 	private int tuplePerPage; 
+	/** the column which serves as the key of index */
 	private String column;
 	
-	// for IO of indexes path
+	/** Below are fields used to read the data from indexes */
 	private File indexFile;
 	private FileChannel fcin;
 	private ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
@@ -37,19 +59,24 @@ public class IndexScanOperator extends Operator{
 	private int numDataEntries; // the real-time number of data entries on the leaf page being read
     private int leafNum = -1; // when not being initialized, the total number of leaf pages is negative.
   	
-	// for basic info of the index : clustered or Not; lowerBound; upperBound
+	/** 
+	 * Basic info of the index : clustered or Not; lowerBound (closed); upperBound(closed); queueOfTuples 
+	 * are used for storing the data entries in the middle state of series of "getNextTuple()" calls.
+	 */
 	private boolean isClustered;
 	private Integer upperBound;
 	private Integer lowerBound;
+	/** Queue of series of Tuple IDs which are targeted at the same key*/
 	private Queue<Integer> queueOfTuples;
 	
-	// When visiting the logicalScanVisitor, A new visitor should be used to discriminate 
-	// the "S.A" from S.A > 10, such that the index attribute is obvious and the lowerBound and UpperBound are obvious.
+	/** When visiting the logicalScanVisitor, A new visitor should be used to discriminate 
+	 * the "S.A" from S.A > 10, such that the index attribute is obvious and the lowerBound and UpperBound are obvious.
 	
-	// eg: tableName: Sailors; tableAliase: S; sortColumn A; 
-	// When the constructor is called, Sailors.A is sure be indexed.
+	 * eg: tableName: Sailors; tableAliase: S; indexColumn A; 
+	 * When the constructor is called, Sailors.A must have been indexed.
+	 */
 	public IndexScanOperator(String tableName, String tableAliase, String indexColumn, Integer lowerBound, Integer upperBound) {
-		//Instantiate the table Name and aliase and DataBase-related field
+		/*Instantiate the table Name and aliase and DataBase-related field*/
 		this.tableName = tableName;
 		this.tableAddress = DataBase.getInstance().getAddresses(tableName);
         this.tableAliase = tableAliase;
@@ -64,30 +91,34 @@ public class IndexScanOperator extends Operator{
 			schema.put(sb.toString(), i);
 		}
 		
-		//is Clustered or Not
+		/*Decide the index we are going to search is Clustered or Not */
 		isClustered = DataBase.getInstance().getIndexInfos().
 				get(tableName).isClustered();	
 		this.upperBound = upperBound == null ? Integer.MAX_VALUE : upperBound;
-		this.lowerBound = lowerBound == null ? 0 : lowerBound;
+		this.lowerBound = lowerBound == null ? Integer.MIN_VALUE : lowerBound;
 		
-		// if isClustered, read from the temporary directory of the table;
+		/* if isClustered, read from the temporary directory of the table */
 		if (isClustered) {
 			this.tableAddress = Dynamic_properties.tempPath + "/"+ tableName;  
 		}
 		
-		// Initialize tuple reader according to the tableAddress and schema
+		/* Initialize tuple reader according to the tableAddress and schema */
 		this.tr = new TupleReader(tableAddress, schema);
 		tuplePerPage = tr.getNumberOfMaxTuples();
-		// IndexFile
+		/* IndexFile */
 		this.indexFile = new File(Dynamic_properties.indexedPath + "/" + tableName + "." + indexColumn);
 
-		// set the name of this operator ?? why ?
+		/* set the name of this operator */
 		StringBuilder sb2 = new StringBuilder();
 		sb2.append("idxScan-").append(tableAliase);
 		name = sb2.toString();
 	}
 	
-	// return the address of the first leafNode
+	/** Find the address of the leafNode whose key range  contains the target key
+	 *  
+	 * @param key: the target to locate the leaf page;
+	 * @return the address of the leaf page where the key might be found 
+	 */
 	private int findLeafPage(int key) {
 		try {
 			if (fcin == null || !fcin.isOpen()) {
@@ -110,7 +141,13 @@ public class IndexScanOperator extends Operator{
 		return -1;	
 	}
 
-	// return the leaf page address during index Search
+	/** Search for the address of the leaf page within which the key might be 
+	 * found, during traversing through the index pages.
+	 * 
+	 * @param key: the target to locate the leaf page 
+	 * @param address: the address of the beginning index node to search leaf page
+	 * @return the address of the leaf page where the key might be found
+	 */
 	private int indexSearch(int key, int address) throws IOException {
 		fcin.position(address * BUFFER_SIZE);
 		buffer.clear();
@@ -137,7 +174,25 @@ public class IndexScanOperator extends Operator{
 		}
 	}
 	 
-	// when first called, only called after buffer is clear and stores the first valid leaf page
+	/**
+	 * The first call of this function is only after the fcin has been located to the leaf address 
+	 * where the target key is within the range of the leaf keys.
+	 * 
+	 * Every time it is called, it will return the next qualified (i.e lowerBound <= key <= upperBound) 
+	 * queue of tupleIDs, and those in the same queue are from the same data entry and corresponding 
+	 * to the same key, which is just another form of the <key, list of rids> pair on the leaf page.
+	 * 
+	 * When readNextTupleIDQueue() is being called again and again thus the leaf page has been read out,
+	 * it will load a new page right behind the former one. If it again gets a leaf page, calling readNextTupleIDQueue()
+	 * will still get queue of tupleIDs whose key is in the required range, or it gets an index page, which
+	 * means it finishes all reading of leafpages, hence it returns null.
+	 * 
+	 * @return the next qualified (i.e lowerBound <= key <= upperBound) queue of tupleIDs.
+	 *         rid = <pageId + tupleId>
+	 *         tupleID = pageId * tupleNumPerPage + tupleId
+	 *         
+	 * @throws IOException
+	 */
 	private Queue<Integer> readNextTupleIDQueue() throws IOException{
 		// corner case 1: if it is at the beginning of a new page
 		if (buffer.position() == 0) {  
@@ -170,6 +225,8 @@ public class IndexScanOperator extends Operator{
 			numDataEntries--;
 			return readNextTupleIDQueue();
 		} else {
+			// in this case, key is larger than upperBound, reading on is not likely 
+			// to get a qualified key, therefore we return null instantly.
 			return null;
 		}
 		
@@ -203,8 +260,8 @@ public class IndexScanOperator extends Operator{
 				} 
 				
 				// at this time, queue is sure to be not null nor empty
-				int TupleID = queueOfTuples.poll();
-				tr.resetFileChannel(TupleID);
+				int tupleID = queueOfTuples.poll();
+				tr.resetFileChannel(tupleID);
 				return tr.readNextTuple();
 				
 			} else { // if it is clustered
@@ -215,16 +272,16 @@ public class IndexScanOperator extends Operator{
 					fcin.read(buffer);
 					buffer.clear();
 					queueOfTuples = readNextTupleIDQueue();
-					// during the initialization of queueOfTuples, if (queriedOfTuples is null) then no data entris will be qualified
+					// during the initialization of queueOfTuples, if (queriedOfTuples is null) then no data entries will be qualified
 					// return null;
 					if (queueOfTuples == null) {
 						fcin.close();
 						return null;
 					}
 					// here tr has been marked to the most left entry which are qualified
-					int TupleID = queueOfTuples.poll();
-					tr.resetFileChannel(TupleID);
-					return tr.readNextTuple(); // it can not be null, because it was the data entry from index tree.
+					int tupleID = queueOfTuples.poll();
+					tr.resetFileChannel(tupleID);
+					return tr.readNextTuple(); // it can not be null, because it was the data entry from leaf node of the index tree.
 				} else {
 					Tuple readFromTable = tr.readNextTuple();
 					if (readFromTable == null) {
@@ -265,6 +322,3 @@ public class IndexScanOperator extends Operator{
 	}
 
 }
-
-// what if the upperBound is null ?
-// how to reset ?
