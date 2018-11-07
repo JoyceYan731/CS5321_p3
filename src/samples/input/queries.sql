@@ -1,0 +1,8 @@
+SELECT * FROM Sailors WHERE Sailors.B > 7000
+SELECT * FROM Boats WHERE Boats.D < 300
+SELECT S.A FROM Sailors AS S WHERE S.A > 9000
+SELECT B.E FROM Boats AS B WHERE Boats.E >= 1000
+SELECT * FROM Sailors, Boats WHERE Sailors.A > 9998
+SELECT * FROM Sailors, Boats WHERE Sailors.A > 9998 AND Boats.E > 5000
+SELECT * FROM Sailors AS S, Boats AS B WHERE S.A >9998 AND Boats.D >= 1000
+SELECT S.A FROM Sailors AS S

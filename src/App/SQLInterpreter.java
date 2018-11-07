@@ -54,11 +54,14 @@ public class SQLInterpreter {
 				Dynamic_properties.setPath(inputDir, outputDir, tempDir);
 				int indexState = Integer.parseInt(br.readLine());
 				int queryState = Integer.parseInt(br.readLine());
+				IndexTreeBuilder itb = new IndexTreeBuilder();
 				if(indexState == 1) {
 					//Build the index
-					IndexTreeBuilder itb = new IndexTreeBuilder();
 					itb.build();
+				}else {
+					itb.sortRelations();
 				}
+				
 				br.close();
 				return queryState;
 			} catch (Exception e) {

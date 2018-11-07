@@ -1,0 +1,32 @@
+TIME START 1541633228790 
+Read statement: SELECT * FROM Sailors WHERE Sailors.B > 7000 
+end 
+time spent： 627ms 
+TIME START 1541633229439 
+Read statement: SELECT * FROM Boats WHERE Boats.D < 300 
+end 
+time spent： 33ms 
+TIME START 1541633229488 
+Read statement: SELECT S.A FROM Sailors AS S WHERE S.A > 9000 
+end 
+time spent： 28ms 
+TIME START 1541633229523 
+Read statement: SELECT B.E FROM Boats AS B WHERE Boats.E >= 1000 
+end 
+time spent： 108ms 
+TIME START 1541633229658 
+Read statement: SELECT * FROM Sailors, Boats WHERE Sailors.A > 9998 
+end 
+time spent： 142ms 
+TIME START 1541633229852 
+Read statement: SELECT * FROM Sailors, Boats WHERE Sailors.A > 9998 AND Boats.E > 5000 
+end 
+time spent： 61ms 
+TIME START 1541633229930 
+Read statement: SELECT * FROM Sailors AS S, Boats AS B WHERE S.A > 9998 AND Boats.D >= 1000 
+end 
+time spent： 196ms 
+TIME START 1541633230169 
+Read statement: SELECT S.A FROM Sailors AS S 
+end 
+time spent： 20ms 

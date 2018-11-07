@@ -34,7 +34,7 @@ public class ScanOperator extends Operator{
 	 */
 	@Override
 	public Tuple getNextTuple() {
-		if (this.leftChild != null) {
+		if (this.leftChild == null) {
 			try {
 				//String data = tr.readNextTuple().getTupleData();
 				Tuple t = tr.readNextTuple();

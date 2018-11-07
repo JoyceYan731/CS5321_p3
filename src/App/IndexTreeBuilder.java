@@ -100,6 +100,22 @@ public class IndexTreeBuilder {
 
 		}
 	}
+	
+	/**
+	 * generate sorted files
+	 * @throws Exception 
+	 */
+	public void sortRelations() throws Exception {
+		for (String str : indexInfoRoster.keySet()) {
+			this.tableName = str;
+			this.order = indexInfoRoster.get(str).getOrder();
+			this.attribute = indexInfoRoster.get(str).getColumn();
+			this.isClustered = indexInfoRoster.get(str).isClustered();
+			if (isClustered) {
+				reCluster () ;
+			}
+		}
+	}
 
 	/**
 	 * helper function to build index tree for every table
@@ -307,7 +323,7 @@ public class IndexTreeBuilder {
 			}
 		});
 
-		clusterFilePath = clusterFilePath +"/"+tableName;
+		clusterFilePath = Dynamic_properties.tempPath +"/"+tableName;
 		
 		TupleWriter write = new TupleWriter(clusterFilePath);
 

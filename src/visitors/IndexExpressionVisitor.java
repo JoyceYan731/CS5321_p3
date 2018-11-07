@@ -115,6 +115,9 @@ public class IndexExpressionVisitor implements ExpressionVisitor {
 
 
 	public Expression getUnIndexedCondition() {
+		if (unindexedCondition.isEmpty()) {
+			return null;
+		}
 		return unindexedCondition.get(0);
 	}
 

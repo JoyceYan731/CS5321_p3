@@ -102,12 +102,14 @@ public class PhysicalPlanVisitor {
 			indVisitor.Classify();
 			Integer[] bounds = indVisitor.getBounds();
 			String column = indVisitor.getIndexColumn();
+			Expression unindexedCondition = indVisitor.getUnIndexedCondition();
+			ScanOperator scan = new ScanOperator(tableName, tableAliase, unindexedCondition);
 			if(!(bounds[0]==null && bounds[1]==null)) {
 				IndexScanOperator indScan = new IndexScanOperator(tableName, tableAliase, column, bounds[1], bounds[0]);
-				childList.add(indScan);
+				scan.setLeftChild(indScan);
 			}
-			Expression unindexedCondition = indVisitor.getUnIndexedCondition();
-			
+			childList.add(scan);
+			root = scan;
 		}else {
 			ScanOperator scan = new ScanOperator(tableName, tableAliase, expression);
 			childList.add(scan);
