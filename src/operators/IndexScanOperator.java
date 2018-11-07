@@ -231,6 +231,10 @@ public class IndexScanOperator extends Operator{
 		}
 		
 	}
+	
+	/**
+	 * @return the Tuple which has the key in the specified range.
+	 */
 
 	@Override
 	public Tuple getNextTuple() {

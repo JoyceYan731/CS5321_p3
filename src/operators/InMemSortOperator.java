@@ -1,5 +1,17 @@
 package operators;
 
+/**
+ * This class is for the in memory sort before the sort-merge Join Operations.
+ * 
+ * Although all data are sorted in memory, it still writes all sorted data to 
+ * the temp/sorted directory such that the SMJ Operator will reset every state by
+ * going back to the file position, and thus avoiding the unbounded state of SMJ
+ * operator.
+ * 
+ * @author Ruoxuan Xu
+ *
+ */
+
 import java.io.IOException;
 import java.util.*;
 

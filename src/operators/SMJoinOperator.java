@@ -8,6 +8,9 @@ import visitors.LocateExpressionVisitor;
 
 /**
  * SMJoin Operator
+ * Use the Sort Merge Join Algorithm to merge the sorted column and generate the 
+ * new tuples qualified for the expression requirements.
+ * 
  * @author Ruoxuan Xu
  *
  */
