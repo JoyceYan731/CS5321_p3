@@ -8,7 +8,7 @@ class IndexScanOperatorTest {
 
 	@Test
 	void test() {
-		Operator test = new IndexScanOperator("Sailors", "Sailors", "A", null, 20);
+		Operator test = new IndexScanOperator("Boats", "Boats", "E", 35, 10000);
 		test.dump();
 	}
 }
