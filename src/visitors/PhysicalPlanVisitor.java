@@ -34,7 +34,7 @@ import util.GlobalLogger;
 /**
  * Visit the logical plan and construct a physical operator 
  * query plan
- * @author yixuanjiang
+ * @author Yixuan Jiang
  *
  */
 public class PhysicalPlanVisitor {
@@ -43,6 +43,7 @@ public class PhysicalPlanVisitor {
 	private int queryNum;
 	private int joinType=0; // 0: TNLJ, 1: BNLJ, 2: SMJ
 	private int sortType=0; // 0: in-memory, 1: external
+	private int indexState=0; // 0: full-scan, 1: use indexes 
 	private int bnljBufferSize;
 	private int exSortBufferSize;
 	//Constructor
@@ -54,14 +55,22 @@ public class PhysicalPlanVisitor {
 		this.queryNum = qN;
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(Dynamic_properties.configuePath));
-			String line = br.readLine();
-			String[] joinConfigue = line.split("\\s+");
-			joinType = Integer.valueOf(joinConfigue[0]);
-			if (joinConfigue.length==2) bnljBufferSize = Integer.valueOf(joinConfigue[1]);
-			line = br.readLine();
-			String[] sortConfigue = line.split("\\s+");
-			sortType = Integer.valueOf(sortConfigue[0]);
-			if (sortConfigue.length==2) exSortBufferSize = Integer.valueOf(sortConfigue[1]);
+			String joinInfo = br.readLine();
+			String sortInfo = br.readLine();
+			String indexInfo = br.readLine();
+			if(joinInfo != null) {
+				String[] joinConfigue = joinInfo.split("\\s+");
+				joinType = Integer.valueOf(joinConfigue[0]);
+				if (joinConfigue.length==2) bnljBufferSize = Integer.valueOf(joinConfigue[1]);
+			}
+			if (sortInfo != null) {
+				String[] sortConfigue = sortInfo.split("\\s+");
+				sortType = Integer.valueOf(sortConfigue[0]);
+				if (sortConfigue.length==2) exSortBufferSize = Integer.valueOf(sortConfigue[1]);
+			}
+			if (indexInfo != null) {
+				indexState = Integer.valueOf(indexInfo);
+			}
 			br.close();
 		}catch(IOException e) {
 			GlobalLogger.getLogger().log(Level.SEVERE, e.toString(), e);
@@ -84,12 +93,17 @@ public class PhysicalPlanVisitor {
 	 * @param scOp: logical scan operator
 	 */
 	public void visit(LogicalScanOperator scOp) {
-		String tableName = scOp.getTableName();
-		String tableAliase = scOp.getTableAliase();
-		Expression expression = scOp.getCondition();
-		ScanOperator scan = new ScanOperator(tableName, tableAliase, expression);
-		childList.add(scan);
-		root = scan;
+		if(indexState == 1) {
+			
+		}else {
+			String tableName = scOp.getTableName();
+			String tableAliase = scOp.getTableAliase();
+			Expression expression = scOp.getCondition();
+			ScanOperator scan = new ScanOperator(tableName, tableAliase, expression);
+			childList.add(scan);
+			root = scan;
+		}
+		
 	}
 	
 	/**

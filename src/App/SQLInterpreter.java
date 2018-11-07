@@ -33,6 +33,9 @@ public class SQLInterpreter {
 	 * @param args[0]   absolute path of input file
 	 * @param args[1]   absolute path of output file
 	 * @param args[2]   absolute path of temporary scratch file directory
+	 * 
+	 * @param args	configuration file path
+	 * @param args[0]	path to configuration file
 	 */
 	public static int init (String[] args) {
 		if(args.length==3) {
@@ -52,7 +55,9 @@ public class SQLInterpreter {
 				int indexState = Integer.parseInt(br.readLine());
 				int queryState = Integer.parseInt(br.readLine());
 				if(indexState == 1) {
-					
+					//Build the index
+					IndexTreeBuilder itb = new IndexTreeBuilder();
+					itb.build();
 				}
 				br.close();
 				return queryState;

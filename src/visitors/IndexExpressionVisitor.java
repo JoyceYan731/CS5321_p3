@@ -1,13 +1,19 @@
 package visitors;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+import data.DataBase;
+import data.IndexNote;
+import logicalOperators.LogicalScanOperator;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.CaseExpression;
 import net.sf.jsqlparser.expression.DateValue;
 import net.sf.jsqlparser.expression.DoubleValue;
+import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.ExpressionVisitor;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.InverseExpression;
@@ -45,9 +51,86 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
 public class IndexExpressionVisitor implements ExpressionVisitor {
-	/* columns to be used when sorting left child */
-	private List<String> columnsInCondition = new ArrayList<>();
+	private IndexNote indexColumn;
+	private String tableName;
+	private String tableAliase;
+	private Expression targetExpression;
+	private List<Expression> indexedCondition = new LinkedList<Expression>();
+	private List<Expression> unindexedCondition = new LinkedList<Expression>();
+	public IndexExpressionVisitor(LogicalScanOperator logicalScan) {
+		tableName = logicalScan.getTableName();
+		tableAliase = logicalScan.getTableAliase();
+		targetExpression = logicalScan.getCondition();
+		Map<String, IndexNote> indexInfoRoster = DataBase.getInstance().getIndexInfos();
+		indexColumn = indexInfoRoster.get(tableName);
+		
+	}
 	
+	
+	public IndexNote getIndexColumn() {
+		return indexColumn;
+	}
+
+
+	public void setIndexColumn(IndexNote indexColumn) {
+		this.indexColumn = indexColumn;
+	}
+
+
+	public String getTableName() {
+		return tableName;
+	}
+
+
+	public void setTableName(String tableName) {
+		this.tableName = tableName;
+	}
+
+
+	public String getTableAliase() {
+		return tableAliase;
+	}
+
+
+	public void setTableAliase(String tableAliase) {
+		this.tableAliase = tableAliase;
+	}
+
+
+	public List<Expression> getIndexedCondition() {
+		return indexedCondition;
+	}
+
+
+	public void setIndexedCondition(List<Expression> indexedCondition) {
+		this.indexedCondition = indexedCondition;
+	}
+
+
+	public List<Expression> getUnIndexedCondition() {
+		return unindexedCondition;
+	}
+
+
+	public void setUnIndexedCondition(List<Expression> unIndexedCondition) {
+		this.unindexedCondition = unIndexedCondition;
+	}
+	
+	public void Classify() {
+		if(targetExpression != null) {
+			targetExpression.accept(this);
+		}else {
+			unindexedCondition.add(targetExpression);
+		}
+		while(unindexedCondition.size()>1) {
+			Expression ex1 = unindexedCondition.get(0);
+			Expression ex2 = unindexedCondition.get(1);
+			unindexedCondition.remove(0);
+			unindexedCondition.remove(1);
+			unindexedCondition.add(0, new AndExpression(ex1, ex2));
+		}
+	}
+
 
 	@Override
 	public void visit(NullValue arg0) {
@@ -140,8 +223,10 @@ public class IndexExpressionVisitor implements ExpressionVisitor {
 	}
 
 	@Override
-	public void visit(AndExpression arg0) {
+	public void visit(AndExpression and) {
 		// TODO Auto-generated method stub
+		and.getLeftExpression().accept(this);
+		and.getRightExpression().accept(this);
 		
 	}
 
@@ -159,19 +244,84 @@ public class IndexExpressionVisitor implements ExpressionVisitor {
 
 	@Override
 	public void visit(EqualsTo arg0) {
-		// TODO Auto-generated method stub
-		
+		Expression left = arg0.getLeftExpression();
+		Expression right = arg0.getRightExpression();
+		if (left instanceof Column && right instanceof Column) {
+			unindexedCondition.add(arg0);
+		}else if (left instanceof Column) {
+			Column column = (Column)left;
+			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
+			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
+				indexedCondition.add(arg0);
+			}else {
+				unindexedCondition.add(arg0);
+			}
+		}else if (right instanceof Column) {
+			Column column = (Column)right;
+			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
+			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
+				indexedCondition.add(arg0);
+			}else {
+				unindexedCondition.add(arg0);
+			}
+		}else {
+			unindexedCondition.add(arg0);
+		}
 	}
 
 	@Override
 	public void visit(GreaterThan arg0) {
-		// TODO Auto-generated method stub
+		Expression left = arg0.getLeftExpression();
+		Expression right = arg0.getRightExpression();
+		if (left instanceof Column && right instanceof Column) {
+			unindexedCondition.add(arg0);
+		}else if (left instanceof Column) {
+			Column column = (Column)left;
+			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
+			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
+				indexedCondition.add(arg0);
+			}else {
+				unindexedCondition.add(arg0);
+			}
+		}else if (right instanceof Column) {
+			Column column = (Column)right;
+			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
+			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
+				indexedCondition.add(arg0);
+			}else {
+				unindexedCondition.add(arg0);
+			}
+		}else {
+			unindexedCondition.add(arg0);
+		}
 		
 	}
 
 	@Override
 	public void visit(GreaterThanEquals arg0) {
-		// TODO Auto-generated method stub
+		Expression left = arg0.getLeftExpression();
+		Expression right = arg0.getRightExpression();
+		if (left instanceof Column && right instanceof Column) {
+			unindexedCondition.add(arg0);
+		}else if (left instanceof Column) {
+			Column column = (Column)left;
+			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
+			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
+				indexedCondition.add(arg0);
+			}else {
+				unindexedCondition.add(arg0);
+			}
+		}else if (right instanceof Column) {
+			Column column = (Column)right;
+			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
+			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
+				indexedCondition.add(arg0);
+			}else {
+				unindexedCondition.add(arg0);
+			}
+		}else {
+			unindexedCondition.add(arg0);
+		}
 		
 	}
 
@@ -195,19 +345,63 @@ public class IndexExpressionVisitor implements ExpressionVisitor {
 
 	@Override
 	public void visit(MinorThan arg0) {
-		// TODO Auto-generated method stub
+		Expression left = arg0.getLeftExpression();
+		Expression right = arg0.getRightExpression();
+		if (left instanceof Column && right instanceof Column) {
+			unindexedCondition.add(arg0);
+		}else if (left instanceof Column) {
+			Column column = (Column)left;
+			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
+			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
+				indexedCondition.add(arg0);
+			}else {
+				unindexedCondition.add(arg0);
+			}
+		}else if (right instanceof Column) {
+			Column column = (Column)right;
+			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
+			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
+				indexedCondition.add(arg0);
+			}else {
+				unindexedCondition.add(arg0);
+			}
+		}else {
+			unindexedCondition.add(arg0);
+		}
 		
 	}
 
 	@Override
 	public void visit(MinorThanEquals arg0) {
-		// TODO Auto-generated method stub
+		Expression left = arg0.getLeftExpression();
+		Expression right = arg0.getRightExpression();
+		if (left instanceof Column && right instanceof Column) {
+			unindexedCondition.add(arg0);
+		}else if (left instanceof Column) {
+			Column column = (Column)left;
+			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
+			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
+				indexedCondition.add(arg0);
+			}else {
+				unindexedCondition.add(arg0);
+			}
+		}else if (right instanceof Column) {
+			Column column = (Column)right;
+			String[] tableNameIndices = column.getWholeColumnName().split("\\.");
+			if (tableNameIndices[1].equals(indexColumn.getColumn())) {
+				indexedCondition.add(arg0);
+			}else {
+				unindexedCondition.add(arg0);
+			}
+		}else {
+			unindexedCondition.add(arg0);
+		}
 		
 	}
 
 	@Override
 	public void visit(NotEqualsTo arg0) {
-		// TODO Auto-generated method stub
+		unindexedCondition.add(arg0)
 		
 	}
 
