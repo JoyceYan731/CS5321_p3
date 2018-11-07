@@ -68,6 +68,7 @@ public class indexNode extends Node{
 	 * generate data list for this index node
 	 */
 	public void buildDataList() {
+		
 		for (Integer key : keys) {
 			this.getDatalist().add(key);
 		}

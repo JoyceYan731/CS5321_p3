@@ -47,13 +47,13 @@ public class IndexTreeBuilder {
 	private Map<String, IndexNote> indexInfoRoster;
 
 
-//	//main method to test
+////	//main method to test
 //	public static void main(String[] args) throws Exception {
 //		//IndexTreeBuilder builder = new IndexTreeBuilder("Boats", "E", 10, true);
 //		IndexTreeBuilder builder = new IndexTreeBuilder();
 //		builder.build();
-//
-//
+////
+////
 //	}
 
 	/** 

@@ -44,6 +44,7 @@ public class leafNode extends Node{
 			int key = keys[keyPosition++];
 			this.getDatalist().add(key);
 			List<Integer[]> values = map.get(key);
+			this.getDatalist().add(values.size());
 			for (Integer[] pair : values) {
 				this.getDatalist().add(pair[0]);
 				this.getDatalist().add(pair[1]);
