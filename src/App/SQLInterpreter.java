@@ -1,5 +1,8 @@
 package App;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -31,12 +34,34 @@ public class SQLInterpreter {
 	 * @param args[1]   absolute path of output file
 	 * @param args[2]   absolute path of temporary scratch file directory
 	 */
-	public static void init (String[] args) {
+	public static int init (String[] args) {
 		if(args.length==3) {
 			Dynamic_properties.setPath(args[0], args[1], args[2]);
+			return 1;
 		}else if (args.length == 2) {
 			Dynamic_properties.setPath(args[0], args[1]);
+			return 1;
+		}else if (args.length == 1) {
+			File configuration = new File (args[0]);
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(configuration));
+				String inputDir = br.readLine();
+				String outputDir = br.readLine();
+				String tempDir = br.readLine();
+				Dynamic_properties.setPath(inputDir, outputDir, tempDir);
+				int indexState = Integer.parseInt(br.readLine());
+				int queryState = Integer.parseInt(br.readLine());
+				if(indexState == 1) {
+					
+				}
+				br.close();
+				return queryState;
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		return 1;
 		
 	}
 	
