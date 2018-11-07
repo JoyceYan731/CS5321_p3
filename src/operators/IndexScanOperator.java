@@ -53,6 +53,7 @@ public class IndexScanOperator extends Operator{
 		this.tableName = tableName;
 		this.tableAddress = DataBase.getInstance().getAddresses(tableName);
         this.tableAliase = tableAliase;
+        this.column = indexColumn;
         LinkedList<String> attributes = DataBase.getInstance().getSchema(tableName);
 		this.schema = new HashMap<String, Integer>();
 		for (int i=0; i< attributes.size(); i++) {
@@ -94,6 +95,7 @@ public class IndexScanOperator extends Operator{
 				fcin = new RandomAccessFile(indexFile, "r").getChannel();
 				buffer.clear();
 				fcin.read(buffer); 
+				buffer.clear();
 				rootIndex = buffer.getInt();
 				leafNum = buffer.getInt();
 			} 
@@ -113,7 +115,7 @@ public class IndexScanOperator extends Operator{
 		fcin.position(address * BUFFER_SIZE);
 		buffer.clear();
 		fcin.read(buffer);
-		
+		buffer.clear();
 		// Base Case: if the page is a leaf page
 		if (buffer.getInt() == 0) {
 			buffer.clear();
@@ -149,7 +151,8 @@ public class IndexScanOperator extends Operator{
 		} 
 		if (numDataEntries == 0) {  // end of one leaf page
 			buffer.clear();
-			fcin.read(buffer);	
+			fcin.read(buffer);
+			buffer.clear();
 			return readNextTupleIDQueue();
 		} 
 		// read and check data entries
@@ -163,6 +166,8 @@ public class IndexScanOperator extends Operator{
 			numDataEntries--;
 			return res;
 		} else if (key < lowerBound) {
+			buffer.position(buffer.position() + length * 4 * 2);
+			numDataEntries--;
 			return readNextTupleIDQueue();
 		} else {
 			return null;
@@ -185,7 +190,8 @@ public class IndexScanOperator extends Operator{
 					int leafAddress = findLeafPage(lowerBound);  // at this time leafNum is assigned with non-negative value
 					fcin.position(leafAddress * BUFFER_SIZE);
 					buffer.clear();
-					fcin.read(buffer);				
+					fcin.read(buffer);	
+					buffer.clear();
 					queueOfTuples = readNextTupleIDQueue();
 				}  else if (queueOfTuples.isEmpty()) {
 					queueOfTuples = readNextTupleIDQueue();
@@ -206,7 +212,8 @@ public class IndexScanOperator extends Operator{
 					int leafAddress = findLeafPage(lowerBound);  // at this time leafNum is assigned with non-negative value
 					fcin.position(leafAddress * BUFFER_SIZE);
 					buffer.clear();
-					fcin.read(buffer);				
+					fcin.read(buffer);
+					buffer.clear();
 					queueOfTuples = readNextTupleIDQueue();
 					// during the initialization of queueOfTuples, if (queriedOfTuples is null) then no data entris will be qualified
 					// return null;
