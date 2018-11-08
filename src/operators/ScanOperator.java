@@ -81,7 +81,12 @@ public class ScanOperator extends Operator{
 	@Override
 	public void reset() {
 		try {
-			this.tr.reset();
+			if(this.leftChild == null) {
+				this.tr.reset();
+			}else {
+				this.leftChild.reset();
+			}
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			e.getMessage();
@@ -90,8 +95,13 @@ public class ScanOperator extends Operator{
 	}
 	
 	public void reset(int bufferIndex, int fileChannelIndex) {
-		this.tr.resetBuffer(bufferIndex);
-		this.tr.resetFileChannel(fileChannelIndex);
+		if (this.leftChild == null) {
+			this.tr.resetBuffer(bufferIndex);
+			this.tr.resetFileChannel(fileChannelIndex);
+		}else {
+			
+		}
+		
 	}
 	
 	/**
