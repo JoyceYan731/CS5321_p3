@@ -28,15 +28,16 @@ public class Dynamic_properties {
 	 * @param p1 output absolute path
 	 * @param p2 temporary scratch file directory
 	 */
-	public static void setPath(String p0, String p1, String p2) {
-		
+	public static void setPath(String p0, String p1, String p2) {		
 		inputPath = p0;
 		outputPath = p1;
 		tempPath = p2;
 		dataPath = inputPath + "/db/data/";
 		queryPath = inputPath + "/queries.sql";
 		schemaPath = inputPath + "/db/schema.txt";
-		
+		configuePath = inputPath + "/plan_builder_config.txt";
+		indexInfoPath = inputPath + "/db/index_info.txt";
+		indexedPath = inputPath + "/db/indexes";
 	}
 	/**
 	 * set input and output path according to pass in parameters

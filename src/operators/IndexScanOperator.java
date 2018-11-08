@@ -238,16 +238,16 @@ public class IndexScanOperator extends Operator{
 
 	@Override
 	public Tuple getNextTuple() {
-		try {
+		try { // if the table index is not clustered
 			if (!isClustered) {
 				if (queueOfTuples == null) { 
 					// if leafNum > 0, then findLeafPage has been called, queueOfTuples has been initialized.
-					// This is the end of data entry, also the end of qualified data.
+					// This means we have reached the end of data entry, also the end of qualified data.
 					if (leafNum > 0) {
 						fcin.close();
 					    return null;
 					}
-					// the first time we call "getNextTuple()"
+					// Here is the first time we call "getNextTuple()"
 					int leafAddress = findLeafPage(lowerBound);  // at this time leafNum is assigned with non-negative value
 					fcin.position(leafAddress * BUFFER_SIZE);
 					buffer.clear();
