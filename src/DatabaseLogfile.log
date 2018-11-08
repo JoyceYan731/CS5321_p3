@@ -1,7 +1,12 @@
-<<<<<<< HEAD
-TIME START 1541643796578 
-Read statement: SELECT * FROM Sailors, Boats WHERE Sailors.A > 9900 AND Boats.E > 5000 
+TIME START 1541699506353 
+Read statement: SELECT * FROM Sailors WHERE Sailors.A < 5 
 end 
-time spent： 9114ms 
-=======
->>>>>>> aaf571f0c29c062ea9a7031f09ef048d3fcf504b
+time spent： 1097ms 
+TIME START 1541699507460 
+Read statement: SELECT * FROM Sailors AS S WHERE S.A > 500 
+end 
+time spent： 40ms 
+TIME START 1541699507511 
+Read statement: SELECT * FROM Sailors, Boats WHERE Sailors.A > 9900 AND Boats.E > 9000 
+end 
+time spent： 28ms 

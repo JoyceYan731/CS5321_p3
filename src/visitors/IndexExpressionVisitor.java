@@ -52,6 +52,9 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
 public class IndexExpressionVisitor implements ExpressionVisitor {
+	/**
+	 * @author Yixuan Jiang
+	 */
 	private String indexColumn;
 	private String tableName;
 	private String tableAliase;
