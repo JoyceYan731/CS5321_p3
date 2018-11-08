@@ -1,4 +1,4 @@
-TIME START 1541642482089 
+TIME START 1541643796578 
 Read statement: SELECT * FROM Sailors, Boats WHERE Sailors.A > 9900 AND Boats.E > 5000 
 end 
-time spent： 8586ms 
+time spent： 9114ms 
